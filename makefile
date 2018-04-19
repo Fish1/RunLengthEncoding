@@ -1,0 +1,2 @@
+install:
+	g++ index.cpp
