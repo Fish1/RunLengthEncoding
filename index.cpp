@@ -4,9 +4,9 @@
 
 #include <fstream>
 
-void decompress(std::string name);
+void decompress(std::string source, std::string destination);
 
-void compress(std::string name);
+void compress(std::string source, std::string destination);
 
 void createFile(std::string name, unsigned int bytes);
 
@@ -16,22 +16,22 @@ int main(int argc, char ** argv)
 {
 	srand(time(NULL));
 
-	if(argc != 3)
+	if(argc != 4)
 	{
 		error("incorrect argument count", 1);
 	}
 
 	if(std::string(argv[1]).compare("-c") == 0)
 	{
-		compress(argv[2]);
+		compress(argv[2], argv[3]);
 	}
 	else if(std::string(argv[1]).compare("-d") == 0)
 	{
-		decompress(argv[2]);
+		decompress(argv[2], argv[3]);
 	}
 	else if(std::string(argv[1]).compare("-cf") == 0)
 	{
-		createFile(argv[2], 100000);
+		createFile(argv[2], std::stoi(argv[3]));
 	}
 	else
 	{
@@ -41,30 +41,28 @@ int main(int argc, char ** argv)
 	return 0;
 }
 
-void decompress(std::string name)
+void decompress(std::string source, std::string destination)
 {
-	std::cout << "decompressing file " << name << "..." << std::endl;
+	std::cout << "decompressing file " << source << "..." << std::endl;
 	
-	std::ifstream input(name, std::ifstream::binary);
+	std::ifstream input(source, std::ifstream::binary);
 	input.seekg(0, std::ifstream::end);
-	unsigned int size = input.tellg();
+	size_t size = input.tellg();
 	input.seekg(0, std::ifstream::beg);
 
-	char data[size + 1];
-	input.read(data, size);
+	uint8_t data[size];
+	input.read((char*)data, size);
 
-	std::ofstream output(name + "_decompressed", std::ofstream::binary);
+	std::ofstream output(destination, std::ofstream::binary);
 
-	for(unsigned int index = 0; index < size + 1; ++index)
+	for(size_t index = 0; index < size; ++index)
 	{
-		uint16_t count = (data[index] << 8) | data[index + 1];
+		uint16_t count = data[index] | (data[index + 1] << 8);
 		uint8_t byte = data[index + 2];
 
 		index += 2;
 
-		std::cout << count << std::endl;
-
-		for(unsigned int byteCount = 0; byteCount < count; ++byteCount)
+		for(uint16_t byteCount = 0; byteCount < count; ++byteCount)
 		{
 			output.write((char*)&byte, sizeof(byte));
 		}
@@ -74,26 +72,25 @@ void decompress(std::string name)
 	output.close();
 }
 
-void compress(std::string name)
+void compress(std::string source, std::string destination)
 {
-	std::cout << "compressing file " << name << "..." << std::endl;
+	std::cout << "compressing file " << source << "..." << std::endl;
 
-	std::ifstream input(name, std::ifstream::binary);
+	std::ifstream input(source, std::ifstream::binary);
 	input.seekg(0, std::ifstream::end);
-	unsigned int size = input.tellg();
+	size_t size = input.tellg();
 	input.seekg(0, std::ifstream::beg);
 
-	uint8_t data[size + 1];
+	uint8_t data[size];
 	input.read((char*)data, size);
 
-	std::ofstream output(
-	std::string(name) + "_compressed", std::ofstream::binary);
+	std::ofstream output(destination, std::ofstream::binary);
 
 	uint8_t byte = data[0];
 	uint8_t last_byte = data[0];
 	uint16_t count = 0;
 
-	for(unsigned int index = 0; index < size + 1; ++index)
+	for(size_t index = 0; index < size; ++index)
 	{
 		byte = data[index];
 
@@ -108,8 +105,8 @@ void compress(std::string name)
 		++count;
 	}
 
-	output << count;
-	output << last_byte;
+	output.write((char*)&count, sizeof(uint16_t));
+	output.write((char*)&last_byte, sizeof(uint8_t));
 
 	input.close();
 	output.close();

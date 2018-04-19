@@ -1,2 +1,2 @@
 install:
-	g++ index.cpp
+	g++ index.cpp -o fishcompress
