@@ -4,12 +4,16 @@
 
 #include <fstream>
 
+// source file is decompressed into the desitnation file
 void decompress(std::string source, std::string destination);
 
+// source file is compressed into the destination file
 void compress(std::string source, std::string destination);
 
+// creates a file with long runs of random ASCII characters
 void createFile(std::string name, unsigned int bytes);
 
+// prints an error message and quits the program
 void error(std::string message, int code);
 
 int main(int argc, char ** argv)
@@ -50,7 +54,7 @@ void decompress(std::string source, std::string destination)
 	size_t size = input.tellg();
 	input.seekg(0, std::ifstream::beg);
 
-	uint8_t data[size];
+	uint8_t * data = new uint8_t[size];
 	input.read((char*)data, size);
 
 	std::ofstream output(destination, std::ofstream::binary);
@@ -70,6 +74,8 @@ void decompress(std::string source, std::string destination)
 
 	input.close();
 	output.close();
+
+	delete [] data;
 }
 
 void compress(std::string source, std::string destination)
@@ -81,7 +87,7 @@ void compress(std::string source, std::string destination)
 	size_t size = input.tellg();
 	input.seekg(0, std::ifstream::beg);
 
-	uint8_t data[size];
+	uint8_t * data = new uint8_t[size];
 	input.read((char*)data, size);
 
 	std::ofstream output(destination, std::ofstream::binary);
@@ -110,6 +116,8 @@ void compress(std::string source, std::string destination)
 
 	input.close();
 	output.close();
+
+	delete [] data;
 }
 
 void createFile(std::string name, unsigned int bytes)
@@ -120,7 +128,7 @@ void createFile(std::string name, unsigned int bytes)
 
 	for(unsigned int index = 0; index < bytes; ++index)
 	{
-		if(index > 10 && (rand() % 5) == 0)
+		if(rand() % 10 == 0)
 		{
 			c = 32 + (rand() % 94);
 		}
@@ -134,6 +142,18 @@ void createFile(std::string name, unsigned int bytes)
 void error(std::string message, int code)
 {
 	std::cout << "Error: " << message << std::endl;
+	std::cout << std::endl;
+
+	std::cout << "Compress:" << std::endl;
+	std::cout << "./fishcompress -c [source] [destination]" << std::endl;
+	std::cout << std::endl;
+
+	std::cout << "Decompress:" << std::endl;
+	std::cout << "./fishcompress -d [source] [destination]" << std::endl;
+	std::cout << std::endl;
+
+	std::cout << "Create Random File:" << std::endl;
+	std::cout << "./fishcompress -cf [filename] [size_in_bytes]" << std::endl;
 
 	exit(code);
 }
