@@ -61,12 +61,12 @@ void decompress(std::string source, std::string destination)
 
 	for(size_t index = 0; index < size; ++index)
 	{
-		uint16_t count = data[index] | (data[index + 1] << 8);
-		uint8_t byte = data[index + 2];
+		uint8_t count = data[index];
+		uint8_t byte = data[index + 1];
 
-		index += 2;
+		index += 1;
 
-		for(uint16_t byteCount = 0; byteCount < count; ++byteCount)
+		for(uint8_t byteCount = 0; byteCount < count; ++byteCount)
 		{
 			output.write((char*)&byte, sizeof(byte));
 		}
@@ -94,15 +94,15 @@ void compress(std::string source, std::string destination)
 
 	uint8_t byte = data[0];
 	uint8_t last_byte = data[0];
-	uint16_t count = 0;
+	uint8_t count = 0;
 
 	for(size_t index = 0; index < size; ++index)
 	{
 		byte = data[index];
 
-		if(byte != last_byte)
+		if(byte != last_byte || count == 255)
 		{
-			output.write((char*)&count, sizeof(uint16_t));
+			output.write((char*)&count, sizeof(uint8_t));
 			output.write((char*)&last_byte, sizeof(uint8_t));
 			count = 0;
 		}
@@ -111,7 +111,7 @@ void compress(std::string source, std::string destination)
 		++count;
 	}
 
-	output.write((char*)&count, sizeof(uint16_t));
+	output.write((char*)&count, sizeof(uint8_t));
 	output.write((char*)&last_byte, sizeof(uint8_t));
 
 	input.close();
@@ -128,7 +128,7 @@ void createFile(std::string name, unsigned int bytes)
 
 	for(unsigned int index = 0; index < bytes; ++index)
 	{
-		if(rand() % 10 == 0)
+		if(rand() % 3 == 0)
 		{
 			c = 32 + (rand() % 94);
 		}
